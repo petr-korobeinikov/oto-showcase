@@ -12,8 +12,10 @@ import (
 
 func main() {
 	g := services.GreeterService{}
+	f := services.FoobarService{}
 	server := otohttp.NewServer()
 	generated.RegisterGreeterService(server, g)
+	generated.RegisterFoobarService(server, f)
 	http.Handle("/oto/", server)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

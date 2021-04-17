@@ -1,0 +1,16 @@
+POST http://localhost:8080/oto/FoobarService.Foo
+Accept: application/json
+Content-Type: application/json
+
+{
+    "multiplier": 10
+}
+
+###
+POST http://localhost:8080/oto/FoobarService.Bar
+Accept: application/json
+Content-Type: application/json
+
+{
+    "bar": "baaaar"
+}

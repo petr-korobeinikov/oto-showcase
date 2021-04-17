@@ -20,3 +20,26 @@ type GreetResponse struct {
 	// example: "Hello Mat Ryer"
 	Greeting string
 }
+
+type FoobarService interface {
+	Foo(FooRequest) FooResponse
+	Bar(BarRequest) BarResponse
+}
+
+type FooRequest struct {
+	Multiplier int
+}
+
+type FooResponse struct {
+	IntVal int
+	StrVal string
+	ArrVal []string
+}
+
+type BarRequest struct {
+	Bar string
+}
+
+type BarResponse struct {
+	Bar string
+}

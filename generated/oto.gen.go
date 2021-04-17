@@ -9,11 +9,65 @@ import (
 	"github.com/pacedotdev/oto/otohttp"
 )
 
+type FoobarService interface {
+	Bar(context.Context, BarRequest) (*BarResponse, error)
+	Foo(context.Context, FooRequest) (*FooResponse, error)
+}
+
 // GreeterService makes nice greetings.
 type GreeterService interface {
 
 	// Greet makes a greeting.
 	Greet(context.Context, GreetRequest) (*GreetResponse, error)
+}
+
+type foobarServiceServer struct {
+	server        *otohttp.Server
+	foobarService FoobarService
+}
+
+// Register adds the FoobarService to the otohttp.Server.
+func RegisterFoobarService(server *otohttp.Server, foobarService FoobarService) {
+	handler := &foobarServiceServer{
+		server:        server,
+		foobarService: foobarService,
+	}
+	server.Register("FoobarService", "Bar", handler.handleBar)
+	server.Register("FoobarService", "Foo", handler.handleFoo)
+}
+
+func (s *foobarServiceServer) handleBar(w http.ResponseWriter, r *http.Request) {
+	var request BarRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.foobarService.Bar(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *foobarServiceServer) handleFoo(w http.ResponseWriter, r *http.Request) {
+	var request FooRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.foobarService.Foo(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
 }
 
 type greeterServiceServer struct {
@@ -45,6 +99,28 @@ func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Reques
 		s.server.OnErr(w, r, err)
 		return
 	}
+}
+
+type BarRequest struct {
+	Bar string `json:"bar"`
+}
+
+type BarResponse struct {
+	Bar string `json:"bar"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+type FooRequest struct {
+	Multiplier int `json:"multiplier"`
+}
+
+type FooResponse struct {
+	IntVal int      `json:"intVal"`
+	StrVal string   `json:"strVal"`
+	ArrVal []string `json:"arrVal"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
 }
 
 // GreetRequest is the request object for GreeterService.Greet.

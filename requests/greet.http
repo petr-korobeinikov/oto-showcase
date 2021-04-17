@@ -1,0 +1,16 @@
+POST http://localhost:8080/oto/GreeterService.Greet
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "foobar"
+}
+
+###
+POST http://localhost:8080/oto/GreeterService.Greet
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "oto"
+}

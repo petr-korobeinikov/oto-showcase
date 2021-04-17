@@ -9,6 +9,10 @@ import (
 	"github.com/pacedotdev/oto/otohttp"
 )
 
+type ErrorService interface {
+	Err(context.Context, ErrorRequest) (*ErrorResponse, error)
+}
+
 type FoobarService interface {
 	Bar(context.Context, BarRequest) (*BarResponse, error)
 	Foo(context.Context, FooRequest) (*FooResponse, error)
@@ -19,6 +23,37 @@ type GreeterService interface {
 
 	// Greet makes a greeting.
 	Greet(context.Context, GreetRequest) (*GreetResponse, error)
+}
+
+type errorServiceServer struct {
+	server       *otohttp.Server
+	errorService ErrorService
+}
+
+// Register adds the ErrorService to the otohttp.Server.
+func RegisterErrorService(server *otohttp.Server, errorService ErrorService) {
+	handler := &errorServiceServer{
+		server:       server,
+		errorService: errorService,
+	}
+	server.Register("ErrorService", "Err", handler.handleErr)
+}
+
+func (s *errorServiceServer) handleErr(w http.ResponseWriter, r *http.Request) {
+	var request ErrorRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.errorService.Err(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
 }
 
 type foobarServiceServer struct {
@@ -107,6 +142,14 @@ type BarRequest struct {
 
 type BarResponse struct {
 	Bar string `json:"bar"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+type ErrorRequest struct {
+}
+
+type ErrorResponse struct {
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

@@ -43,3 +43,12 @@ type BarRequest struct {
 type BarResponse struct {
 	Bar string
 }
+
+type ErrorService interface {
+	Err(ErrorRequest) ErrorResponse
+}
+
+type ErrorRequest struct {
+}
+type ErrorResponse struct {
+}
